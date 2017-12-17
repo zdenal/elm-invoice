@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Elm demo</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script src='invoices.js'></script>
+</head>
+
+<body>
+  <div class="container invoice">
+    <div class="invoice-header">
+      <div class="row">
+        <div class="col-xs-8">
+          <h1>Invoice <small>With Credit</small></h1>
+          <h4 class="text-muted">NO: 554775/R1 | Date: 01/01/2015</h4>
+        </div>
+        <div class="col-xs-4">
+          <div class="media">
+            <div class="media-left">
+              <img class="media-object logo" src="https://dummyimage.com/70x70/000/fff&text=ACME" />
+            </div>
+            <ul class="media-body list-unstyled">
+              <li><strong>Acme Corporation</strong></li>
+              <li>Software Development</li>
+              <li>Field 3, Moon</li>
+              <li>info@acme.com</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="invoice-body">
+      <div class="row">
+        <div class="col-xs-5">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">Company Details</h3>
+            </div>
+            <div class="panel-body">
+              <dl class="dl-horizontal">
+                <dt>Name</dt>
+                <dd><strong>Acme Corporation</strong></dd>
+                <dt>Industry</dt>
+                <dd>Software Development</dd>
+                <dt>Address</dt>
+                <dd>Field 3, Moon</dd>
+                <dt>Phone</dt>
+                <dd>123.4456.4567</dd>
+                <dt>Email</dt>
+                <dd>mainl@acme.com</dd>
+                <dt>Tax NO</dt>
+                <dd class="mono">123456789</dd>
+                <dt>Tax Office</dt>
+                <dd>A' Moon</dd>
+            </div>
+          </div>
+        </div>
+        <div class="col-xs-7">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">Customer Details</h3>
+            </div>
+            <div class="panel-body">
+              <dl class="dl-horizontal">
+                <dt>Name</dt>
+                <dd>Microsoft Corporation</dd>
+                <dt>Industry</dt>
+                <dd>Software Development</dd>
+                <dt>Address</dt>
+                <dd>One Microsoft Way Redmond, WA 98052-7329, USA</dd>
+                <dt>Phone</dt>
+                <dd>(425) 882-8080</dd>
+                <dt>Email</dt>
+                <dd>contact@microsoft.com</dd>
+                <dt>Tax NO</dt>
+                <dd class="mono">123456789</dd>
+                <dt>&nbsp;</dt>
+                <dd>&nbsp;</dd>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="invoice">
+      </div>
+      <div class="row">
+        <div class="col-xs-7">
+          <div class="panel panel-default">
+            <div class="panel-body">
+              <i>Comments / Notes</i>
+              <hr style="margin:3px 0 5px" /> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Odit repudiandae numquam sit facere blanditiis, quasi distinctio ipsam? Libero odit ex expedita, facere sunt, possimus consectetur dolore, nobis iure amet vero.
+            </div>
+          </div>
+        </div>
+        <div class="col-xs-5">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">Payment Method</h3>
+            </div>
+            <div class="panel-body">
+              <p>For your convenience, you may deposite the final ammount at one of our banks</p>
+              <ul class="list-unstyled">
+                <li>Alpha Bank - <span class="mono">MO123456789456123</span></li>
+                <li>Beta Bank - <span class="mono">MO123456789456123</span></li>
+                <li>Gamma Bank - <span class="mono">MO123456789456123</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="invoice-footer">
+      Thank you for choosing our services.
+      <br/> We hope to see you again soon
+      <br/>
+      <strong>~ACME~</strong>
+    </div>
+  </div>
+</body>
+
+<script>
+    var node = document.getElementById('invoice');
+    var app = Elm.Invoices.embed(node);
+    // Note: if your Elm module is named "MyThing.Root" you
+    // would call "Elm.MyThing.Root.embed(node)" instead.
+</script>
+</html>
