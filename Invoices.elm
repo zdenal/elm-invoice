@@ -63,15 +63,6 @@ calculateProductTax product =
     (calculateProductPriceTotal product) * (product.tax / 100)
 
 
-calculateModelTotal : List Product -> Float
-calculateModelTotal products =
-    let
-        total =
-            List.map .total products |> List.sum
-    in
-        total
-
-
 
 -- UPDATE
 
@@ -101,7 +92,6 @@ update msg model =
             in
                 { model
                     | products = List.map changeUnit model.products
-                    , total = calculateModelTotal model.products
                 }
 
         ChangeTax id newTax ->

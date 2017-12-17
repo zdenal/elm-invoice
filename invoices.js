@@ -8469,16 +8469,6 @@ var _myrho$elm_round$Round$roundCom = _myrho$elm_round$Round$roundFun(
 	});
 var _myrho$elm_round$Round$roundNumCom = _myrho$elm_round$Round$funNum(_myrho$elm_round$Round$roundCom);
 
-var _user$project$Invoices$calculateModelTotal = function (products) {
-	var total = _elm_lang$core$List$sum(
-		A2(
-			_elm_lang$core$List$map,
-			function (_) {
-				return _.total;
-			},
-			products));
-	return total;
-};
 var _user$project$Invoices$calculateProductPriceTotal = function (product) {
 	var unit = _elm_lang$core$Basics$toFloat(product.unit);
 	return unit * product.price;
@@ -8720,8 +8710,7 @@ var _user$project$Invoices$update = F2(
 				return _elm_lang$core$Native_Utils.update(
 					model,
 					{
-						products: A2(_elm_lang$core$List$map, changeUnit, model.products),
-						total: _user$project$Invoices$calculateModelTotal(model.products)
+						products: A2(_elm_lang$core$List$map, changeUnit, model.products)
 					});
 			case 'ChangeTax':
 				var changeTax = function (product) {
