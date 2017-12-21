@@ -3,15 +3,20 @@ module Invoices exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
+import Http
+import Json.Decode as Decode
+import Json.Decode.Pipeline exposing (decode, required)
 import Round
+import Product
 
 
 main : Program Never Model Msg
 main =
-    Html.beginnerProgram
-        { model = initModel
+    Html.program
+        { init = init
         , view = view
         , update = update
+        , subscriptions = subscriptions
         }
 
 
@@ -19,18 +24,19 @@ main =
 -- MODEL
 
 
-type alias Product =
-    { id : Int
-    , item : String
-    , unit : Int
-    , tax : Float
-    , price : Float
-    }
-
-
 type alias Model =
-    { products : List Product
+    { products : List Product.Product
     }
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
+
+
+init : ( Model, Cmd Msg )
+init =
+    ( initModel, Product.fetchProducts NewProducts )
 
 
 initModel : Model
@@ -38,36 +44,16 @@ initModel =
     Model []
 
 
-addNew : Model -> Model
-addNew { products } =
-    products
-        ++ [ { id = List.length products, item = "", unit = 1, tax = 21, price = 0 } ]
-        |> Model
-
-
-calculateProductTotal : Product -> Float
-calculateProductTotal product =
-    calculateProductPriceTotal product + calculateProductTax product
-
-
-calculateProductPriceTotal : Product -> Float
-calculateProductPriceTotal { unit, price } =
-    toFloat unit * price
-
-
-calculateProductTax : Product -> Float
-calculateProductTax ({ tax } as product) =
-    calculateProductPriceTotal product * (tax / 100)
-
-
 updateWithId : id -> ({ a | id : id } -> { a | id : id }) -> List { a | id : id } -> List { a | id : id }
 updateWithId id predicate =
-    List.map (\p -> if id == p.id then predicate p else p)
+    List.map
+        (\p ->
+            if id == p.id then
+                predicate p
+            else
+                p
+        )
 
-
-updateProducts : (List Product -> List Product) -> Model -> Model
-updateProducts updateWith ({ products } as model) =
-    { model | products = updateWith products}
 
 
 -- UPDATE
@@ -78,34 +64,57 @@ type Msg
     | ChangeUnit Int String
     | ChangeTax Int String
     | ChangePrice Int String
+    | NewProducts (Result Http.Error (List Product.Product))
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg ({ products } as model) =
     case msg of
+        NewProducts (Ok products) ->
+            let
+                _ =
+                    Debug.log "Result: " products
+            in
+                ( { model | products = products }, Cmd.none )
+
+        NewProducts (Err error) ->
+            let
+                _ =
+                    Debug.log "Error: " error
+            in
+                ( model, Cmd.none )
+
         AddProduct ->
-            addNew model
+            ( { model | products = Product.addNewProduct model.products }
+            , Cmd.none
+            )
 
         ChangeUnit id newUnit ->
             let
                 updateUnit product =
                     { product | unit = Result.withDefault product.unit <| String.toInt newUnit }
             in
-                updateProducts (updateWithId id updateUnit) model
+                ( { model | products = Product.updateProducts (updateWithId id updateUnit) model.products }
+                , Cmd.none
+                )
 
         ChangeTax id newTax ->
             let
                 updateTax product =
                     { product | tax = Result.withDefault product.tax <| String.toFloat newTax }
             in
-                updateProducts (updateWithId id updateTax) model
+                ( { model | products = Product.updateProducts (updateWithId id updateTax) model.products }
+                , Cmd.none
+                )
 
         ChangePrice id newPrice ->
             let
                 updatePrice product =
                     { product | price = Result.withDefault product.price <| String.toFloat newPrice }
             in
-                updateProducts (updateWithId id updatePrice) model
+                ( { model | products = Product.updateProducts (updateWithId id updatePrice) model.products }
+                , Cmd.none
+                )
 
 
 
@@ -114,23 +123,19 @@ update msg ({ products } as model) =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ viewProducts model.products
-        , br [] []
-        , viewSummary model
-        ]
-
-
-viewProduct : Product -> Html Msg
-viewProduct product =
-    tr [ class "item" ]
-        [ td [] [ product.id |> toString |> text ]
-        , td [] [ input [ placeholder "Name of product" ] [] ]
-        , td [] [ input [ value (product.unit |> toString), type_ "number", onInput (ChangeUnit product.id) ] [] ]
-        , td [] [ input [ value (product.tax |> toString), type_ "number", onInput (ChangeTax product.id) ] [] ]
-        , td [] [ input [ value (product.price |> toString), type_ "number", onInput (ChangePrice product.id) ] [] ]
-        , td [] [ calculateProductTotal product |> Round.round 2 |> text ]
-        ]
+    let
+        config =
+            { changeUnit = ChangeUnit
+            , changeTax = ChangeTax
+            , changePrice = ChangePrice
+            , addProduct = AddProduct
+            }
+    in
+        div []
+            [ Product.viewProducts config model.products
+            , br [] []
+            , viewSummary model
+            ]
 
 
 viewSummary : Model -> Html Msg
@@ -140,52 +145,31 @@ viewSummary model =
             List.map .unit model.products |> List.sum |> toString
 
         priceTotal =
-            List.map calculateProductPriceTotal model.products |> List.sum |> Round.round 2
+            List.map Product.calculateProductPriceTotal model.products |> List.sum |> Round.round 2
 
         taxTotal =
-            List.map calculateProductTax model.products |> List.sum |> Round.round 2
+            List.map Product.calculateProductTax model.products |> List.sum |> Round.round 2
 
         total =
-            List.map calculateProductTotal model.products |> List.sum |> Round.round 2
+            List.map Product.calculateProductTotal model.products |> List.sum |> Round.round 2
     in
-    div [ class "panel panel-default" ]
-        [ table [ class "table table-bordered table-condensed" ]
-            [ thead []
-                [ tr []
-                    [ td [ class "text-center col-xs-1" ] [ text "Unit Total" ]
-                    , td [ class "text-center col-xs-1" ] [ text "Tax Total" ]
-                    , td [ class "text-center col-xs-1" ] [ text "Price Total" ]
-                    , td [ class "text-center col-xs-1" ] [ text "Total" ]
+        div [ class "panel panel-default" ]
+            [ table [ class "table table-bordered table-condensed" ]
+                [ thead []
+                    [ tr []
+                        [ td [ class "text-center col-xs-1" ] [ text "Unit Total" ]
+                        , td [ class "text-center col-xs-1" ] [ text "Tax Total" ]
+                        , td [ class "text-center col-xs-1" ] [ text "Price Total" ]
+                        , td [ class "text-center col-xs-1" ] [ text "Total" ]
+                        ]
                     ]
-                ]
-            , tbody []
-                [ tr []
-                    [ td [ class "text-center rowtotal mono" ] [ text unitTotal ]
-                    , td [ class "text-center rowtotal mono" ] [ text taxTotal ]
-                    , td [ class "text-center rowtotal mono" ] [ text priceTotal ]
-                    , td [ class "text-center rowtotal mono" ] [ text total ]
+                , tbody []
+                    [ tr []
+                        [ td [ class "text-center rowtotal mono" ] [ text unitTotal ]
+                        , td [ class "text-center rowtotal mono" ] [ text taxTotal ]
+                        , td [ class "text-center rowtotal mono" ] [ text priceTotal ]
+                        , td [ class "text-center rowtotal mono" ] [ text total ]
+                        ]
                     ]
                 ]
             ]
-        ]
-
-
-viewProducts : List Product -> Html Msg
-viewProducts products =
-    div [ class "panel-default" ]
-        [ div [ class "panel-heading" ]
-            [ h3 [ class "panel-title" ] [ text "Services / Products" ] ]
-        , table [ class "table table-bordered table-condensed" ]
-            [ tbody [] <|
-                tr []
-                    [ td [] [ text "Id" ]
-                    , td [] [ text "Product" ]
-                    , td [] [ text "Unit" ]
-                    , td [] [ text "Tax" ]
-                    , td [] [ text "Price" ]
-                    , td [] [ text "Total" ]
-                    ]
-                    :: List.map viewProduct products
-            ]
-        , button [ onClick AddProduct, class "btn btn-primary btn-lg btn-block" ] [ text "Add a product" ]
-        ]

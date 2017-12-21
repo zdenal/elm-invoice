@@ -1,0 +1,17 @@
+{
+  "name": "invoices",
+  "version": "1.0.0",
+  "description": "Elm test",
+  "main": "index.js",
+  "repository": "git@github.com:zdenal/elm-invoice.git",
+  "author": "Zdenko Nevrala <nevralaz@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "elm-live": "^2.7.5",
+    "foreman": "^2.0.0",
+    "json-server": "0.9.5"
+  },
+  "scripts": {
+    "start": "nf start"
+  }
+}
